@@ -327,6 +327,7 @@ def main():
 
     # Generate crossword
     crossword = Crossword(structure, words)
+    print(crossword.words)
     creator = CrosswordCreator(crossword)
     assignment = creator.solve()
 
