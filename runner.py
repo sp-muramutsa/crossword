@@ -1,8 +1,8 @@
 from generate import CrosswordCreator
 from crossword import Crossword, Variable
 
-structure = "data/structure0.txt"
-words = "data/words0.txt"
+structure = "data/structure2.txt"
+words = "data/words1.txt"
 
 # Set up crossword
 
@@ -11,5 +11,5 @@ creator = CrosswordCreator(crossword)
 
 creator.enforce_node_consistency()
 creator.ac3()
-
-
+a = creator.solve()
+print(a)
