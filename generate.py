@@ -2,7 +2,6 @@ import sys
 
 from crossword import *
 from collections import defaultdict
-import copy
 
 
 class CrosswordCreator:
@@ -186,21 +185,20 @@ class CrosswordCreator:
 
             if variable.length != len(value):
                 return False
-            
+
             # there are no conflicts between neighboring variables.
             neighbors = self.crossword.neighbors(variable)
             for neighbor in neighbors:
 
                 if neighbor not in assignment:
                     continue
-                
+
                 overlap = self.crossword.overlaps[variable, neighbor]
                 index_x, index_y = overlap
 
                 neighbor_value = assignment[neighbor]
                 if value[index_x] != neighbor_value[index_y]:
                     return False
-                
 
             if value in counter:
                 return False
@@ -218,10 +216,10 @@ class CrosswordCreator:
         values = self.domains[var]
 
         counter = {value: 0 for value in values}
-        neighbors = self.crossword.neighbors(var) 
+        neighbors = self.crossword.neighbors(var)
 
         for value in values:
-            
+
             for neighbor in neighbors:
 
                 # Skip assigned neighbors
@@ -279,16 +277,39 @@ class CrosswordCreator:
         variable = self.select_unassigned_variable(assignment)
 
         for value in self.order_domain_values(variable, assignment):
-            assignment[variable] = value
+
+            # Save a copy of current domain and current assignment
+            domains_backup = self.domains.copy()
+            assignment_backup = assignment.copy()
 
             if self.consistent(assignment):
- 
-                result = self.backtrack(assignment)
+                assignment[variable] = value
+                self.domains[variable] = {value}
 
-                if result:
-                    return result
+                # Prepare arcs to propagate inference
+                arcs = [
+                    (neighbor, variable)
+                    for neighbor in self.crossword.neighbors(variable)
+                ]
 
-            del assignment[variable]
+                inferences = self.ac3(arcs)
+
+                if inferences:
+                    # Add inferences to assignment
+                    inferences = {
+                        var: list(self.domains[var])[0]
+                        for var in self.domains
+                        if var not in assignment and len(self.domains[var]) == 1
+                    }
+                    assignment.update(inferences)
+
+                    result = self.backtrack(assignment)
+                    if result:
+                        return result
+
+            # Remove {var = value} and inferences from  assignment
+            self.domains = domains_backup
+            assignment = assignment_backup
 
         return None
 
